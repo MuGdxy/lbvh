@@ -20,6 +20,15 @@ Also, nearest neighbor query based on the following paper is supported.
 
 - Nick Roussopoulos, Stephen Kelley, Frederic Vincent, "Nearest Neighbor Queries", ACM-SIGMOD (1995)
 
+## Modification
+
+This version is maintained by MuGdxy.
+
+1. The device is the first class.
+2. We redesigned the API of LBVH; LBVH maintains the `objects`, and the user needs to get the reference of `objects` and fill it out.
+3. We rename the `get_device_repr()` to `viewer()` and `cviewer()`
+4. To query on the host, the user needs to call `download()` to get the device result manually
+
 ## example code
 
 ```cpp
@@ -66,18 +75,14 @@ int main()
     std::vector<objects> objs;
 
     // initialize objs ...
-
-    // construct a bvh
-    lbvh::bvh<float, object, aabb_getter> bvh(objs.begin(), objs.end());
-
-    // get a set of device (raw) pointers to use it in device functions.
-    // Do not use this on host!
-    const auto bvh_dev = bvh.get_device_repr();
-
+    lbvh::bvh<float, object, aabb_getter> bvh;
+    bvh.objects() = objs;
+    bvh.build();
+    
     thrust::for_each(thrust::device,
         thrust::make_counting_iterator<unsigned int>(0),
         thrust::make_counting_iterator<unsigned int>(N),
-        [bvh_dev] __device__ (const unsigned int idx)
+        [bvh_dev = bvh.viewer()] __device__ (const unsigned int idx)
         {
             unsigned int buffer[10];
 
@@ -130,63 +135,6 @@ inline bool intersects(const aabb<T>& lhs, const aabb<T>& rhs) noexcept;
 template<typename T>
 __device__ __host__
 inline aabb<T> merge(const aabb<T>& lhs, const aabb<T>& rhs) noexcept
-```
-
-### BVH
-
-```cpp
-template<typename Real, typename Object, typename AABBGetter,
-         typename MortonCodeCalculator = default_morton_code_calculator<Real, Object, AABBGetter>>
-class bvh
-{
-  public:
-    using real_type   = Real;
-    using index_type = std::uint32_t;
-    using object_type = Object;
-    using aabb_type   = aabb<real_type>;
-    using node_type   = detail::node;
-    using point_getter_type = PointGetter;
-    using aabb_getter_type  = AABBGetter;
-
-    template<typename InputIterator>
-    bvh(InputIterator first, InputIterator last)
-        : objects_h_(first, last), objects_d_(objects_h_)
-    {
-        this->construct();
-    }
-
-    template<typename InputIterator>
-    void assign(InputIterator first, InputIterator last);
-    void clear();
-
-    bvh_device<real_type, object_type>  get_device_repr()       noexcept;
-    cbvh_device<real_type, object_type> get_device_repr() const noexcept;
-};
-namespace detail {
-template<typename Real, typename Object, bool IsConst>
-struct basic_device_bvh
-{
-    using real_type  = Real;
-    using aabb_type  = aabb<real_type>;
-    using node_type  = detail::node;
-    using index_type = std::uint32_t;
-    using object_type = Object;
-
-    unsigned int num_nodes;   // (# of internal node) + (# of leaves), 2N+1
-    unsigned int num_leaves;  // (# of leaves), N
-    unsigned int num_objects; // (# of objects) ; can be larger than N
-
-    /* const if IsConst is true */ node_type  * nodes;
-    /* const if IsConst is true */ aabb_type  * aabbs;
-    /* const if IsConst is true */ index_type * ranges;
-    /* const if IsConst is true */ index_type * indices;
-    /* const if IsConst is true */ object_type* objects;
-};
-}
-template<typename Real, typename Object>
-using  bvh_device = detail::basic_device_bvh<Real, Object, false>;
-template<typename Real, typename Object>
-using cbvh_device = detail::basic_device_bvh<Real, Object, true>;
 ```
 
 ## queries
