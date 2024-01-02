@@ -11,7 +11,7 @@ add_library(LBVH INTERFACE)
 target_include_directories(LBVH INTERFACE "${PROJECT_SOURCE_DIR}/include")
 file(GLOB_RECURSE LBVH_HEADERS "${PROJECT_SOURCE_DIR}/include/lbvh/*.cuh")
 target_sources(LBVH INTERFACE "${LBVH_HEADERS}")
-source_group(TREE "${PROJECT_SOURCE_DIR}/include/lbvh" FILES ${LBVH_HEADERS})
+source_group(TREE "${PROJECT_SOURCE_DIR}/include/" FILES ${LBVH_HEADERS})
 
 # lambda & constexpr support
 target_compile_options(LBVH INTERFACE
