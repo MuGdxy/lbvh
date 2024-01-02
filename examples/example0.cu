@@ -1,11 +1,11 @@
-#include "lbvh.cuh"
+#include <lbvh/lbvh.cuh>
 #include <random>
 #include <vector>
 #include <thrust/random.h>
 
 struct aabb_getter
 {
-    __device__
+    __device__ __host__
     lbvh::aabb<float> operator()(const float4 f) const noexcept
     {
         lbvh::aabb<float> retval;
@@ -16,7 +16,7 @@ struct aabb_getter
 };
 struct distance_calculator
 {
-    __device__
+    __device__ __host__
     float operator()(const float4 point, const float4 object) const noexcept
     {
         return (point.x - object.x) * (point.x - object.x) +
@@ -25,7 +25,7 @@ struct distance_calculator
     }
 };
 
-int main()
+int example0()
 {
     constexpr std::size_t N=10;
     std::vector<float4> ps(N);
@@ -109,7 +109,7 @@ int main()
     thrust::transform(
         thrust::make_counting_iterator<unsigned int>(0),
         thrust::make_counting_iterator<unsigned int>(N),
-        random_points.begin(), [] __device__(const unsigned int idx) {
+        random_points.begin(), [] __device__ __host__(const unsigned int idx) {
             thrust::default_random_engine rand;
             thrust::uniform_real_distribution<float> uni(0.0f, 1.0f);
             rand.discard(idx);

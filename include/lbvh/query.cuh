@@ -1,5 +1,6 @@
 #ifndef LBVH_QUERY_CUH
 #define LBVH_QUERY_CUH
+#include "bvh.cuh"
 #include "predicator.cuh"
 
 namespace lbvh

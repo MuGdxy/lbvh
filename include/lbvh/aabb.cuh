@@ -3,6 +3,7 @@
 #include "utility.cuh"
 #include <thrust/swap.h>
 #include <cmath>
+#include <cuda_runtime.h>
 
 namespace lbvh
 {

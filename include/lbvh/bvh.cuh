@@ -16,6 +16,7 @@
 #include <thrust/reduce.h>
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/iterator/counting_iterator.h>
+#include <thrust/unique.h>
 #include <thrust/execution_policy.h>
 
 namespace lbvh
@@ -67,7 +68,7 @@ struct basic_device_bvh<Real, Object, true>
 };
 
 template<typename UInt>
-__device__
+__device__ __host__
 inline uint2 determine_range(UInt const* node_code,
         const unsigned int num_leaves, unsigned int idx)
 {
@@ -129,7 +130,7 @@ inline uint2 determine_range(UInt const* node_code,
 }
 
 template<typename UInt>
-__device__
+__device__ __host__
 inline unsigned int find_split(UInt const* node_code, const unsigned int num_leaves,
     const unsigned int first, const unsigned int last) noexcept
 {
@@ -168,7 +169,7 @@ void construct_internal_nodes(const basic_device_bvh<Real, Object, IsConst>& sel
     thrust::for_each(thrust::device,
         thrust::make_counting_iterator<unsigned int>(0),
         thrust::make_counting_iterator<unsigned int>(num_objects - 1),
-        [self, node_code, num_objects] __device__ (const unsigned int idx)
+        [self, node_code, num_objects] __device__ __host__ (const unsigned int idx)
         {
             self.nodes[idx].object_idx = 0xFFFFFFFF; //  internal nodes
 
@@ -320,7 +321,7 @@ class bvh
 
         const auto aabb_whole = thrust::reduce(
             aabbs_.begin() + num_internal_nodes, aabbs_.end(), default_aabb,
-            [] __device__ (const aabb_type& lhs, const aabb_type& rhs) {
+            [] __device__ __host__ (const aabb_type& lhs, const aabb_type& rhs) {
                 return merge(lhs, rhs);
             });
 
@@ -354,7 +355,7 @@ class bvh
         {
             thrust::transform(morton.begin(), morton.end(), indices.begin(),
                 morton64.begin(),
-                [] __device__ (const unsigned int m, const unsigned int idx)
+                [] __device__ __host__ (const unsigned int m, const unsigned int idx)
                 {
                     unsigned long long int m64 = m;
                     m64 <<= 32;
@@ -375,7 +376,7 @@ class bvh
 
         thrust::transform(indices.begin(), indices.end(),
             this->nodes_.begin() + num_internal_nodes,
-            [] __device__ (const index_type idx)
+            [] __device__ __host__ (const index_type idx)
             {
                 node_type n;
                 n.parent_idx = 0xFFFFFFFF;
