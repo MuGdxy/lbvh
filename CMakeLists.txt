@@ -10,7 +10,6 @@ option(LBVH_BUILD_EXAMPLES "Build tests" ON)
 add_library(lbvh INTERFACE)
 target_include_directories(lbvh INTERFACE "${PROJECT_SOURCE_DIR}/include")
 file(GLOB_RECURSE LBVH_HEADERS "${PROJECT_SOURCE_DIR}/include/lbvh/*.cuh")
-target_sources(lbvh INTERFACE "${LBVH_HEADERS}")
 source_group(TREE "${PROJECT_SOURCE_DIR}/include/" FILES ${LBVH_HEADERS})
 
 # lambda & constexpr support
